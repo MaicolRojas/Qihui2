@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qihui - Calculadora Avanzada de Inversiones</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2F80ED;
+            --background: #F8FAFC;
+            --surface: #FFFFFF;
+            --text-primary: #1E293B;
+            --text-secondary: #64748B;
+            --border: #E2E8F0;
+            --success: #4CAF50;
+            --error: #e53e3e;
+            --table-row-even: #F8FAFC;
+        }
+
+        .dark-mode {
+            --background: #1a1a1a;
+            --surface: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --border: #404040;
+            --success: #81C784;
+            --error: #fc8181;
+            --table-row-even: #2d2d2d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 2rem;
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--surface);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            transition: background-color 0.3s ease;
+        }
+
+        .header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+            position: relative;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            justify-content: center;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            right: 1.5rem;
+            top: 1.5rem;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            background: var(--background);
+        }
+
+        .tab-bar {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 1rem;
+            background: none;
+            border: none;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .tab-button.active {
+            color: var(--primary);
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary);
+        }
+
+        .form-section {
+            padding: 2rem;
+            max-width: 600px;
+            margin: 0 auto;
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.875rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+            background: var(--surface);
+            color: var(--text-primary);
+        }
+
+        .input-field.error {
+            border-color: var(--error);
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.1);
+        }
+
+        .primary-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .primary-btn:hover {
+            background: #2563EB;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .utility-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        /* Resto del CSS anterior... */
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .results-container, .variacion-inversion, .results-summary, .pie-chart-container {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .config-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .config-buttons button {
+            flex: 1;
+        }
+
+        .error-message {
+            color: var(--error);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        @media print {
+            .main-container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+            
+            .theme-toggle, .tab-bar, .view-selector, button {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <header class="header">
+            <div class="logo">
+                <img src="https://data.qihui365.xyz/h5/static/images/logo.png" class="logo-icon" alt="Logo Qihui">
+                Qihui
+            </div>
+            <button id="themeToggle" class="theme-toggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </header>
+
+        <nav class="tab-bar">
+            <button class="tab-button active" data-tab="tab1">Cálculo por Días</button>
+            <button class="tab-button" data-tab="tab2">Cálculo por Meta</button>
+        </nav>
+
+        <!-- Sección por Días -->
+        <section class="form-section active" id="tab1">
+            <div class="input-group">
+                <label>Moneda</label>
+                <select class="input-field" id="moneda">
+                    <option value="COP">COP - Peso Colombiano</option>
+                    <option value="USD">USD - Dólar Estadounidense</option>
+                    <option value="EUR">EUR - Euro</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Inversión Inicial</label>
+                <input type="text" class="input-field" id="inversion" placeholder="Ej: 1,000,000" oninput="formatearMoneda(this)">
+                <div class="error-message" id="error-inversion"></div>
+            </div>
+            
+            <div class="input-group">
+                <label>Período de Inversión (Días)</label>
+                <input type="number" class="input-field" id="dias" placeholder="Ej: 30">
+                <div class="error-message" id="error-dias"></div>
+            </div>
+
+            <button class="primary-btn" onclick="calcularInversion()">
+                <i class="fas fa-chart-line"></i>
+                Calcular Por Dias
+            </button>
+
+            <div class="config-buttons">
+                <button class="primary-btn" onclick="saveConfiguration()">
+                    <i class="fas fa-save"></i>
+                    Guardar
+                </button>
+                <button class="primary-btn" onclick="loadConfiguration()">
+                    <i class="fas fa-upload"></i>
+                    Cargar
+                </button>
+            </div>
+        </section>
+
+        <!-- Sección por Meta -->
+        <section class="form-section" id="tab2">
+            <div class="input-group">
+                <label>Moneda</label>
+                <select class="input-field" id="moneda-meta">
+                    <option value="COP">COP - Peso Colombiano</option>
+                    <option value="USD">USD - Dólar Estadounidense</option>
+                    <option value="EUR">EUR - Euro</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Capital Inicial</label>
+                <input type="text" class="input-field" id="inversion-meta" placeholder="Ej: 1,000,000" oninput="formatearMoneda(this)">
+                <div class="error-message" id="error-inversion-meta"></div>
+            </div>
+            
+            <div class="input-group">
+                <label>Meta Financiera</label>
+                <input type="text" class="input-field" id="meta" placeholder="Ej: 5,000,000" oninput="formatearMoneda(this)">
+                <div class="error-message" id="error-meta"></div>
+            </button>
+
+            <div class="config-buttons">
+                <button class="primary-btn" onclick="saveConfiguration()">
+                    <i class="fas fa-save"></i>
+                    Guardar
+                </button>
+                <button class="primary-btn" onclick="loadConfiguration()">
+                    <i class="fas fa-upload"></i>
+                    Cargar
+                </button>
+            </div>
+        </section>
+
+        <!-- Resto del HTML anterior... -->
+
+    <!-- JavaScript actualizado -->
+    <script>
+        let myChart = null;
+        let pieChart = null;
+        let hasCalculations = false;
+        let chartLabels = [];
+        let chartData = [];
+        let currentCurrency = 'COP';
+        let exchangeRates = { COP: 1, USD: 0.00025, EUR: 0.00022 }; // Ejemplo, usar API real
+
+        // Configuración inicial
+        document.addEventListener('DOMContentLoaded', function() {
+            loadConfiguration();
+            setupLanguage();
+            checkNotificationsPermission();
+        });
+
+        // Función para configurar el idioma
+        function setupLanguage() {
+            const savedLang = localStorage.getItem('language') || 'es';
+            document.getElementById('language').value = savedLang;
+            cambiarIdioma(savedLang);
+        }
+
+        // Función para cambiar idioma
+        function cambiarIdioma(lang) {
+            const textos = {
+                es: {
+                    inversionInicial: "Inversión Inicial",
+                    dias: "Días",
+                    calcular: "Calcular",
+                    meta: "Meta Financiera",
+                    // Agregar más traducciones
+                },
+                en: {
+                    inversionInicial: "Initial Investment",
+                    dias: "Days",
+                    calcular: "Calculate",
+                    meta: "Financial Goal",
+                    // Agregar más traducciones
+                }
+            };
+
+            document.querySelectorAll('[data-lang]').forEach(element => {
+                const key = element.dataset.lang;
+                element.textContent = textos[lang][key];
+            });
+        }
+
+        // Función para validar entradas
+        function validarEntrada(input, errorElement) {
+            const valor = input.value.replace(/[^\d]/g, '');
+            if (!valor || isNaN(valor)) {
+                input.classList.add('error');
+                errorElement.classList.add('show');
+                errorElement.textContent = 'Valor inválido';
+                return false;
+            }
+            input.classList.remove('error');
+            errorElement.classList.remove('show');
+            return true;
+        }
+
+        // Función para exportar a Excel
+        async function exportToExcel() {
+            const table = document.querySelector('.results-table');
+            const rows = table.querySelectorAll('tr');
+            let csvContent = "data:text/csv;charset=utf-8,";
+
+            rows.forEach(row => {
+                let rowData = [];
+                row.querySelectorAll('th, td').forEach(cell => {
+                    rowData.push(cell.innerText.replace(/,/g, ''));
+                });
+                csvContent += rowData.join(",") + "\r\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `resultados_inversion_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Función para guardar configuración
+        function saveConfiguration() {
+            const config = {
+                inversion: document.getElementById("inversion").value,
+                dias: document.getElementById("dias").value,
+                meta: document.getElementById("meta").value,
+                moneda: document.getElementById("moneda").value,
+                language: document.getElementById("language").value
+            };
+            localStorage.setItem('config', JSON.stringify(config));
+            showNotification('Configuración guardada', 'success');
+        }
+
+        // Función para cargar configuración
+        function loadConfiguration() {
+            const config = JSON.parse(localStorage.getItem('config'));
+            if (config) {
+                document.getElementById("inversion").value = config.inversion;
+                document.getElementById("dias").value = config.dias;
+                document.getElementById("meta").value = config.meta;
+                document.getElementById("moneda").value = config.moneda;
+                document.getElementById("language").value = config.language;
+                cambiarIdioma(config.language);
+                showNotification('Configuración cargada', 'success');
+            } else {
+                showNotification('No hay configuración guardada', 'error');
+            }
+        }
+
+        // Función para mostrar notificaciones
+        function showNotification(message, type = 'info') {
+            const icon = {
+                success: 'fa-check-circle',
+                error: 'fa-times-circle',
+                info: 'fa-info-circle'
+            }[type];
+
+            const toast = document.createElement('div');
+            toast.className = `toast-notification ${type}`;
+            toast.innerHTML = `
+                <i class="fas ${icon}"></i>
+                ${message}
+            `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Resto de funciones anteriores actualizadas...
+
+        // Función para imprimir resultados
+        function imprimirResultados() {
+            window.print();
+        }
+
+        // Función para verificar permiso de notificaciones
+        function checkNotificationsPermission() {
+            if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+                Notification.requestPermission();
+            }
+        }
+
+        // Actualizar funciones de cálculo para usar moneda
+        async function getExchangeRate(currency) {
+            try {
+                const response = await fetch(`https://api.exchangerate-api.com/v4/latest/COP`);
+                const data = await response.json();
+                return data.rates[currency];
+            } catch (error) {
+                showNotification('Error obteniendo tasas de cambio', 'error');
+                return exchangeRates[currency]; // Usar valor por defecto
+            }
+        }
+
+        // Función principal de cálculo actualizada
+        async function calcularInversion() {
+            const moneda = document.getElementById("moneda").value;
+            const tasaCambio = await getExchangeRate(moneda);
+            
+            // Resto del cálculo actualizado para usar moneda...
+            let myChart = null;
+    let pieChart = null;
+    let hasCalculations = false;
+    let chartLabels = [];
+    let chartData = [];
+    let currentCurrency = 'COP';
+    let exchangeRates = {};
+    let historial = [];
+
+    // Configuración inicial
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeTheme();
+        loadConfiguration();
+        setupEventListeners();
+        checkNotificationsPermission();
+        initializeExchangeRates();
+    });
+
+    function initializeTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('themeToggle').querySelector('i').className = 'fas fa-sun';
+        }
+    }
+
+    function setupEventListeners() {
+        // Tema
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        
+        // Pestañas
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', switchTab);
+        });
+
+        // Vistas
+        document.querySelectorAll('.view-button').forEach(button => {
+            button.addEventListener('click', switchView);
+        });
+
+        // Idioma
+        document.getElementById('language').addEventListener('change', updateLanguage);
+
+        // Modal
+        document.getElementById('modalOverlay').addEventListener('click', closeModal);
+        document.addEventListener('keydown', handleKeyboardEvents);
+    }
+
+    async function initializeExchangeRates() {
+        try {
+            const response = await fetch('https://open.er-api.com/v6/latest/COP');
+            const data = await response.json();
+            exchangeRates = data.rates;
+        } catch (error) {
+            console.error('Error fetching exchange rates:', error);
+            exchangeRates = { COP: 1, USD: 0.00025, EUR: 0.00022 }; // Valores por defecto
+        }
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        const icon = this.querySelector('i');
+        icon.className = isDarkMode ? 'fas fa-sun' : 'fas fa-moon';
+        refreshCharts();
+    }
+
+    function switchTab(e) {
+        const tabId = e.target.dataset.tab;
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+        e.target.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+        resetResults();
+    }
+
+    function switchView(e) {
+        if(!hasCalculations) return;
+        const view = e.target.dataset.view;
+        document.querySelectorAll('.view-button').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        document.getElementById('tablaResultados').style.display = view === 'tabla' ? 'block' : 'none';
+        document.getElementById('graficoVariacion').style.display = view === 'grafico' ? 'block' : 'none';
+    }
+
+    function updateLanguage(e) {
+        const lang = e.target.value;
+        localStorage.setItem('language', lang);
+        cambiarIdioma(lang);
+    }
+
+    function cambiarIdioma(lang) {
+        const textos = {
+            es: {
+                inversionInicial: "Inversión Inicial",
+                dias: "Días",
+                calcular: "Calcular",
+                meta: "Meta Financiera",
+                exportar: "Exportar a Excel",
+                imprimir: "Imprimir Resultados",
+                guardar: "Guardar Config",
+                cargar: "Cargar Config"
+            },
+            en: {
+                inversionInicial: "Initial Investment",
+                dias: "Days",
+                calcular: "Calculate",
+                meta: "Financial Goal",
+                exportar: "Export to Excel",
+                imprimir: "Print Results",
+                guardar: "Save Config",
+                cargar: "Load Config"
+            }
+        };
+
+        document.querySelectorAll('[data-lang]').forEach(element => {
+            const key = element.dataset.lang;
+            element.textContent = textos[lang][key];
+        });
+    }
+
+    async function calcularInversion() {
+        try {
+            const moneda = document.getElementById("moneda").value;
+            const inversionInicial = convertirANumero(document.getElementById("inversion").value);
+            const dias = parseInt(document.getElementById("dias").value);
+            const tasaCambio = await getExchangeRate(moneda);
+
+            if (!validarEntradas(inversionInicial, dias)) return;
+
+            const results = await performCalculation(inversionInicial, dias, tasaCambio);
+            displayResults(results);
+            updateHistory('dias', results);
+            showNotification('Cálculo completado', 'success');
+        } catch (error) {
+            showNotification(error.message, 'error');
+        }
+    }
+
+    async function calcularTiempoMeta() {
+        try {
+            const moneda = document.getElementById("moneda-meta").value;
+            const inversionInicial = convertirANumero(document.getElementById("inversion-meta").value);
+            const meta = convertirANumero(document.getElementById("meta").value);
+            const tasaCambio = await getExchangeRate(moneda);
+
+            if (!validarMeta(inversionInicial, meta)) return;
+
+            const results = await performMetaCalculation(inversionInicial, meta, tasaCambio);
+            displayResults(results);
+            updateHistory('meta', results);
+            showNotification('Cálculo completado', 'success');
+        } catch (error) {
+            showNotification(error.message, 'error');
+        }
+    }
+
+    async function performCalculation(inicial, dias, tasa) {
+        const profitDiario = 0.0058;
+        let saldo = inicial * tasa;
+        let gananciasTotales = 0;
+        const resultados = [];
+
+        for (let dia = 1; dia <= dias; dia++) {
+            const profits = calculateDailyProfits(saldo, profitDiario);
+            saldo += profits.total;
+            gananciasTotales += profits.total;
+            
+            resultados.push({
+                dia,
+                inversion: inicial,
+                ...profits,
+                total: saldo
+            });
+        }
+
+        return {
+            tipo: 'dias',
+            moneda: currentCurrency,
+            inicial,
+            dias,
+            saldoFinal: saldo,
+            gananciasTotales,
+            resultados
+        };
+    }
+
+    function calculateDailyProfits(saldo, rate) {
+        const profit1 = saldo * rate;
+        const profit2 = (saldo + profit1) * rate;
+        const profit3 = (saldo + profit1 + profit2) * rate;
+        return {
+            profit1,
+            profit2,
+            profit3,
+            total: profit1 + profit2 + profit3
+        };
+    }
+
+    function displayResults(results) {
+        updateTable(results);
+        updateCharts(results);
+        updateSummary(results);
+        showResultsSection();
+        hasCalculations = true;
+    }
+
+    function updateTable(results) {
+        const tbody = document.querySelector("#tablaResultados tbody");
+        tbody.innerHTML = "";
+        
+        results.resultados.forEach(item => {
+            const fila = document.createElement("tr");
+            fila.innerHTML = `
+                <td>${item.dia}</td>
+                <td>${formatearMoneda(item.inversion, results.moneda)}</td>
+                <td>${formatearMoneda(item.profit1, results.moneda)}</td>
+                <td>${formatearMoneda(item.profit2, results.moneda)}</td>
+                <td>${formatearMoneda(item.profit3, results.moneda)}</td>
+                <td>${formatearMoneda(item.totalGanadoDia, results.moneda)}</td>
+                <td>${formatearMoneda(item.total, results.moneda)}</td>
+            `;
+            tbody.appendChild(fila);
+        });
+    }
+
+    function updateCharts(results) {
+        chartLabels = results.resultados.map(item => `Día ${item.dia}`);
+        chartData = results.resultados.map(item => item.total);
+        pieDataInversion = results.inicial;
+        pieDataGanancias = results.gananciasTotales;
+
+        updateChart(chartLabels, chartData, results.moneda);
+        updatePieChart(pieDataInversion, pieDataGanancias, results.moneda);
+    }
+
+    // Resto de funciones auxiliares (formatearMoneda, validarEntradas, etc.)
+    function formatearMoneda(valor, moneda) {
+        return new Intl.NumberFormat('es-CO', {
+            style: 'currency',
+            currency: moneda,
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(valor);
+    }
+
+    function validarEntradas(inversion, dias) {
+        // Implementar validación detallada
+        return true;
+    }
+
+    function updateHistory(tipo, data) {
+        historial.push({
+            fecha: new Date().toISOString(),
+            tipo,
+            data
+        });
+        localStorage.setItem('historial', JSON.stringify(historial));
+    }
+
+    function exportToExcel() {
+        // Implementación completa de exportación
+    }
+
+    function imprimirResultados() {
+        window.print();
+    }
+
+    function refreshCharts() {
+        if(myChart) myChart.destroy();
+        if(pieChart) pieChart.destroy();
+        updateChart(chartLabels, chartData);
+        updatePieChart(pieDataInversion, pieDataGanancias);
+    }
+
+    // Funciones del sistema de notificaciones
+    function checkNotificationsPermission() {
+        if(Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    }
+
+    function showNotification(message, type = 'info') {
+        if(Notification.permission === 'granted') {
+            new Notification(message);
+        }
+        
+        // Mostrar notificación visual
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Funciones de persistencia
+    function saveConfiguration() {
+        const config = {
+            inversion: document.getElementById("inversion").value,
+            dias: document.getElementById("dias").value,
+            meta: document.getElementById("meta").value,
+            moneda: document.getElementById("moneda").value,
+            language: document.getElementById("language").value,
+            theme: localStorage.getItem('theme')
+        };
+        localStorage.setItem('config', JSON.stringify(config));
+        showNotification('Configuración guardada', 'success');
+    }
+
+    function loadConfiguration() {
+        const config = JSON.parse(localStorage.getItem('config'));
+        if(config) {
+            // Implementar carga de configuración
+        }
+    }
+
+    // Manejo de errores global
+    window.onerror = function(message, source, lineno, colno, error) {
+        showNotification(`Error: ${message}`, 'error');
+        return true;
+    };
+        }
+    </script>
+</body>
+</html>
